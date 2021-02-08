@@ -71,3 +71,29 @@ axios({
   //form data application/x-www-form-urlencoded;charset=UTF-8
   data: new URLSearchParams('q=URLUtils.searchParams&topic=api')
 })
+
+interface User {
+  name: string
+  age: number
+}
+
+interface ResponseData<T = any> {
+  code: number
+  result: T
+  message: string
+}
+
+function getUser<T>() {
+  return axios<ResponseData<T>>('/extend/user')
+    .then(res => res.data)
+    .catch(console.error)
+}
+
+async function test() {
+  const user = await getUser<User>()
+  if (user) {
+    console.log(user)
+  }
+}
+
+test()
