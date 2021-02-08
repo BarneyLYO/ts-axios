@@ -20,6 +20,7 @@ export interface AxiosRequestConfig {
   params?: any
   headers?: { [key in string]: string }
   responseType?: XMLHttpRequestResponseType
+  timeout?: number
 }
 
 export interface AxiosResponse {
@@ -32,5 +33,13 @@ export interface AxiosResponse {
 }
 
 export interface AxiosPromise extends Promise<AxiosResponse> {}
+
+export interface AxiosError extends Error {
+  isAxiosError: boolean
+  config: AxiosRequestConfig
+  code?: string | null
+  request?: any //html http request
+  response?: AxiosResponse
+}
 
 export type PlainStrKeyOnlyObj = { [key in string]: any }
