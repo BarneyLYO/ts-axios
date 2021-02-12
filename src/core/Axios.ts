@@ -1,7 +1,38 @@
-import { AxiosPromise, AxiosRequestConfig, Axios, Method } from '../types'
+import {
+  AxiosPromise,
+  AxiosRequestConfig,
+  Axios,
+  Method,
+  AxiosResponse,
+  ResolvedFn,
+  RejectFn
+} from '../types'
+import InterceptorManager from './InterceptorManager'
 import dispatch from './dispatcher'
+import mergeConfig from '../helpers/mergeConfig'
+
+interface Interceptors {
+  request: InterceptorManager<AxiosRequestConfig>
+  response: InterceptorManager<AxiosResponse>
+}
+
+interface PromiseChain<T> {
+  resolved: ResolvedFn<T> | ((config: AxiosRequestConfig) => AxiosPromise)
+  rejected?: RejectFn
+}
 
 export default class AxiosImpl implements Axios {
+  public interceptors: Interceptors
+  public defaults: AxiosRequestConfig
+
+  constructor(initConfig: AxiosRequestConfig) {
+    this.defaults = initConfig
+    this.interceptors = {
+      request: new InterceptorManager<AxiosRequestConfig>(),
+      response: new InterceptorManager<AxiosResponse>()
+    }
+  }
+
   request(urlorConfig: any, config?: any): AxiosPromise {
     if (typeof urlorConfig === 'string') {
       if (!config) config = {}
@@ -9,7 +40,32 @@ export default class AxiosImpl implements Axios {
     } else {
       config = urlorConfig
     }
-    return dispatch(config)
+
+    config = mergeConfig(this.defaults, config)
+    const chain: PromiseChain<any>[] = [
+      {
+        resolved: dispatch,
+        rejected: undefined
+      }
+    ]
+
+    // config -> request interceptor -> ...... -> dispatch ->
+    // response -> response interceptor -> ...... -> handle response
+
+    //stack
+    this.interceptors.request.forEach(interceptor => chain.unshift(interceptor))
+
+    //queue
+    this.interceptors.response.forEach(interceptor => chain.push(interceptor))
+
+    let currentResolved = Promise.resolve(config)
+
+    while (chain.length) {
+      const { resolved, rejected } = chain.shift()!
+      currentResolved = currentResolved.then(resolved, rejected)
+    }
+
+    return currentResolved
   }
 
   get(url: string, config?: AxiosRequestConfig): AxiosPromise {

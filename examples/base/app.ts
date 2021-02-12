@@ -1,3 +1,4 @@
+import qs from 'qs'
 import axios from '../../src/index'
 
 // axios({
@@ -50,19 +51,21 @@ axios({
 }).then(res => {
   console.log('llll', res)
 })
-
+axios.defaults.headers.common['asdasdasd'] = '31312313131'
+axios.defaults.headers['bbbbb'] = 12345
 axios({
   method: 'post',
   url: '/base/post',
-  headers: {
-    'content-type': 'application/json',
-    accept: 'application/json, text/plain, */*'
-  },
+  // headers: {
+  //   'content-type': 'application/json',
+  //   accept: 'application/json, text/plain, */*'
+  // },
   responseType: 'json', //auto parser
-  data: {
+  data: qs.stringify({
+    //submit as form data
     a: 1,
     b: 2
-  }
+  })
 }).then(res => console.log('res', res))
 
 axios({

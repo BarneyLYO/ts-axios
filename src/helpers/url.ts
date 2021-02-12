@@ -54,3 +54,20 @@ const serializeUrl = (url: string, parametersParts: string[]): string => {
 
   return url
 }
+const urlParsingNode = document.createElement('a')
+const currentOrigin = resolveURL(window.location.href)
+
+function resolveURL(url: string) {
+  urlParsingNode.setAttribute('href', url)
+  const { protocol, host } = urlParsingNode
+  return { protocol, host }
+}
+
+export const isAbsURL = (url: string): boolean => /(^[a-z][a-z\d\+\-\.]*:)?\/\//i.test(url)
+export const combineURL = (baseURL: string, relativeURL?: string): string =>
+  relativeURL ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '') : baseURL
+
+export const isURLSameOrigin = (requestURL: string): boolean => {
+  const origin = resolveURL(requestURL)
+  return origin.protocol === currentOrigin.protocol && origin.host === currentOrigin.host
+}

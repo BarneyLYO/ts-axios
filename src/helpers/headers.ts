@@ -1,4 +1,6 @@
+import { Method } from '../types'
 import { isPlainObj } from './objs'
+import { deepMerge } from './util'
 
 export function processHeaders(headers: { [key in string]: string }, data: any) {
   const processed = normalizeHeaderName(headers)
@@ -21,7 +23,7 @@ export function parseHeaderStr(headerStr: string): { [key in string]: string } {
   }, {})
 }
 
-const normalizeHeaderName = (headers: { [key in string]: string }): { [key in string]: string } => {
+const normalizeHeaderName = (headers: { [key in string]: any }): { [key in string]: any } => {
   if (!headers) return {}
   const keys = Object.keys(headers)
   if (keys.length === 0) return {}
@@ -31,4 +33,14 @@ const normalizeHeaderName = (headers: { [key in string]: string }): { [key in st
     const key = k.toLowerCase()
     return { ...obj, [key]: val }
   }, {})
+}
+
+export const flattenHeaders = (headers: any, method: Method) => {
+  if (!headers) return headers
+
+  headers = deepMerge(headers.common, headers[method], headers)
+  headers = Object.keys(headers)
+    .filter(k => typeof headers[k] === 'string' || typeof headers[k] === 'number')
+    .reduce((obj, curr) => ({ ...obj, [curr]: headers[curr] }), {})
+  return headers
 }

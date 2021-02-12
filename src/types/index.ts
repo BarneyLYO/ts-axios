@@ -18,9 +18,21 @@ export interface AxiosRequestConfig {
   method?: Method
   data?: any
   params?: any
-  headers?: StrMap
+  headers?: any | StrMap
   responseType?: XMLHttpRequestResponseType
   timeout?: number
+  transformRequest?: AxiosTransformer | AxiosTransformer[]
+  transformResponse?: AxiosTransformer | AxiosTransformer[]
+  cancelToken?: CancelToken
+  withCredentials?: boolean //跨域携带cookie
+  xsrfCookieName?: string
+  xsrfHeaderName?: string
+  onDownloadProgress?: (e: ProgressEvent) => void
+  onUploadProgress?: (e: ProgressEvent) => void
+  auth?: AxiosBasicCredentials
+  validateStatus?: (status: number) => boolean
+  baseURL?: string
+  [prop: string]: any
 }
 
 export interface AxiosResponse<T = any> {
@@ -43,6 +55,11 @@ export interface AxiosError extends Error {
 }
 
 export interface Axios {
+  defaults: AxiosRequestConfig
+  interceptors: {
+    request: AxiosInterceptorManager<AxiosRequestConfig>
+    response: AxiosInterceptorManager<AxiosResponse>
+  }
   request<T = any>(config: AxiosRequestConfig): AxiosPromise<T>
   get<T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
   delete<T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
@@ -53,11 +70,50 @@ export interface Axios {
   patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise<T>
 }
 
+export interface ResolvedFn<T> {
+  (val: T): T | Promise<T>
+}
+
+export interface RejectFn {
+  (error: any): any
+}
+
+export interface AxiosInterceptorManager<T> {
+  use(resolve: ResolvedFn<T>, rejected?: RejectFn): number
+  eject(id: number): void
+}
+
 export interface AxiosInstance extends Axios {
   <T = any>(config: AxiosRequestConfig): AxiosPromise<T>
   <T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
 }
 
+export interface AxiosStatic extends AxiosInstance {
+  create(config?: AxiosRequestConfig): AxiosInstance
+}
+
 export type StrMap = { [key in string]: string }
 
 export type PlainStrKeyOnlyObj = { [key in string]: any }
+
+export interface AxiosTransformer {
+  (data: any, headers?: any): any
+}
+
+export interface CancelToken {
+  promise: Promise<string>
+  reason?: string
+}
+
+export interface Canceler {
+  (msg?: string): void
+}
+
+export interface CancelExecutor {
+  (cancel: Canceler): void
+}
+
+export interface AxiosBasicCredentials {
+  username: string
+  password: string
+}
